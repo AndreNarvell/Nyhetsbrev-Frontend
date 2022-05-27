@@ -4,6 +4,7 @@ import axios from 'axios'
 import { IUser } from '../models/IUser'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { ILogin } from '../models/ILogin'
+import { SubmitHandler, useForm } from 'react-hook-form'
 
 const Home: NextPage = () => {
   const [failure, setFailure] = useState<any>('')
@@ -21,32 +22,69 @@ const Home: NextPage = () => {
     subscription: !checkbox,
   })
 
+  // const headers = {
+  //   Accept: 'application/json',
+  //   'Content-Type': 'application/json',
+  //   withCredentials: true,
+  //   credentials: 'include',
+  // }
+
   const signinUser = async () => {
-    await axios.post('http://localhost:5000/users/login', user).then((res) => {
-      if (res.data == 'Failure') {
-        setFailure(<p>Fel användarnamn eller lösenord</p>)
-      } else {
-        localStorage.setItem('user', JSON.stringify(res.data.userPost.userId))
-        setFailure('')
-        setLoggedIn(true)
-        setCheckbox(res.data.userPost.subscription)
-        setSubUser({ ...subUser, userId: res.data.userPost.userId })
-        console.log(res.data.userPost.subscription)
-      }
-    })
+    await axios
+      .post('https://nyhetsbrev-back-end.azurewebsites.net/users/login', user, {
+        headers: {
+          'Content-Type': 'application/json',
+          credentials: 'include',
+        },
+      })
+      .then((res) => {
+        if (res.data == 'Failure') {
+          setFailure(<p>Fel användarnamn eller lösenord</p>)
+        } else {
+          localStorage.setItem('user', JSON.stringify(res.data.userPost.userId))
+          setFailure('')
+          setLoggedIn(true)
+          setCheckbox(res.data.userPost.subscription)
+          setSubUser({ ...subUser, userId: res.data.userPost.userId })
+          console.log(res.data.userPost.subscription)
+        }
+      })
   }
 
-  const updateSub = () => {
-    axios.put('http://localhost:5000/users/change', subUser).then((res) => {
-      console.log(res)
-    })
+  // const signinUser = async () => {
+  //   console.log('körs')
+
+  //   const response = await fetch('http://localhost:5000/users/login', {
+  //     method: 'POST',
+  //     body: JSON.stringify(user),
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       credentials: 'include',
+  //     },
+  //   })
+  //   setLoggedIn(true)
+
+  //   const result = await response.json()
+  //   console.log(result)
+  // }
+
+  const updateSub = async () => {
+    await axios
+      .put(
+        'https://nyhetsbrev-back-end.azurewebsites.net/users/change',
+        subUser
+      )
+      .then((res) => {
+        console.log(res)
+      })
     console.log(checkbox)
+    setChangedSub(<p>Subscription status changed!</p>)
   }
 
   const handleChecked = () => {
     setCheckbox(!checkbox)
     setSubUser({ ...subUser, subscription: !checkbox })
-    setChangedSub(<p>Subscription status changed!</p>)
+    // setChangedSub(<p>Subscription status changed!</p>)
 
     setTimeout(() => {
       setChangedSub('')
@@ -55,7 +93,8 @@ const Home: NextPage = () => {
     }, 3000)
   }
 
-  const handleClick = () => {
+  const handleClick = (e: any) => {
+    e.preventDefault()
     signinUser()
   }
 
@@ -67,15 +106,19 @@ const Home: NextPage = () => {
   const handleLogin = (e: ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value })
   }
+  // const getLoggedInUser = async (userId: string) => {
+  //   await axios.get(`http://localhost:5000/users/${userId}`).then((res) => {
+  //     console.log(res)
+  //   })
+
+  // }
 
   useEffect(() => {
     if (localStorage.getItem('user') || '') {
+      // getLoggedInUser(localStorage.getItem('user') as string)
       setLoggedIn(true)
-      setCheckbox(subUser.subscription)
     }
   }, [])
-
-  // let loggedInUser = localStorage.getItem('user') || ''
 
   return (
     <>
@@ -84,7 +127,7 @@ const Home: NextPage = () => {
           <h1 className="mb-8 text-center text-3xl">
             Very nice log in page yes
           </h1>
-          <form className="w-full max-w-sm">
+          <form className="w-full max-w-sm" onSubmit={handleClick}>
             <div className="mb-6 md:flex md:items-center">
               <div className="md:w-1/3">
                 <label className="mb-1 block pr-4 font-bold text-gray-500 md:mb-0 md:text-right">
@@ -98,6 +141,7 @@ const Home: NextPage = () => {
                   type="email"
                   placeholder="Email"
                   name="email"
+                  required
                   onChange={handleLogin}
                 />
               </div>
@@ -115,6 +159,7 @@ const Home: NextPage = () => {
                   type="password"
                   placeholder="••••••••"
                   name="password"
+                  required
                   onChange={handleLogin}
                 />
               </div>
@@ -125,8 +170,8 @@ const Home: NextPage = () => {
               <div className="md:w-2/3">
                 <button
                   className="focus:shadow-outline mr-5 rounded bg-purple-500 py-2 px-4 font-bold text-white shadow hover:bg-purple-400 focus:outline-none"
-                  type="button"
-                  onClick={handleClick}
+                  type="submit"
+                  // onClick={handleClick}
                 >
                   Log in
                 </button>
@@ -164,7 +209,6 @@ const Home: NextPage = () => {
               onChange={handleChecked}
               checked={checkbox}
             />
-            {changesSub}
 
             <br />
             <button
@@ -174,6 +218,7 @@ const Home: NextPage = () => {
             >
               Save
             </button>
+            {changesSub}
           </form>
           <Link href={'/'}>
             <button

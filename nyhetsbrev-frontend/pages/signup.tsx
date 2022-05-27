@@ -14,7 +14,10 @@ const Signup: NextPage = () => {
   const [agree, setAgree] = useState(true)
 
   const signupUser = async () => {
-    await axios.post<IUser>('http://localhost:5000/users', newUser)
+    await axios.post<IUser>(
+      'https://nyhetsbrev-back-end.azurewebsites.net/users',
+      newUser
+    )
   }
 
   const handleRegister = (e: ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +46,7 @@ const Signup: NextPage = () => {
               className="border-grey-light mb-4 block w-full rounded border p-3"
               name="email"
               placeholder="Email"
+              required
               onChange={handleRegister}
             />
 
@@ -51,6 +55,7 @@ const Signup: NextPage = () => {
               className="border-grey-light mb-4 block w-full rounded border p-3"
               name="password"
               placeholder="Password"
+              required
               onChange={handleRegister}
             />
 
