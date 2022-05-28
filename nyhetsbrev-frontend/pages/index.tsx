@@ -4,30 +4,21 @@ import axios from 'axios'
 import { IUser } from '../models/IUser'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { ILogin } from '../models/ILogin'
-import { SubmitHandler, useForm } from 'react-hook-form'
 
 const Home: NextPage = () => {
-  const [failure, setFailure] = useState<any>('')
-  const [changesSub, setChangedSub] = useState<any>('')
+  const [failure, setFailure] = useState(false)
+  const [changesSub, setChangedSub] = useState(false)
+  const [checkbox, setCheckbox] = useState(false)
+
   const [user, setUser] = useState<ILogin>({
     email: '',
     password: '',
   })
 
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [checkbox, setCheckbox] = useState(false)
-
   const [subUser, setSubUser] = useState({
     userId: '',
-    subscription: !checkbox,
+    subscription: false,
   })
-
-  // const headers = {
-  //   Accept: 'application/json',
-  //   'Content-Type': 'application/json',
-  //   withCredentials: true,
-  //   credentials: 'include',
-  // }
 
   const signinUser = async () => {
     await axios
@@ -39,34 +30,23 @@ const Home: NextPage = () => {
       })
       .then((res) => {
         if (res.data == 'Failure') {
-          setFailure(<p>Fel användarnamn eller lösenord</p>)
+          setFailure(true)
         } else {
-          localStorage.setItem('user', JSON.stringify(res.data.userPost.userId))
-          setFailure('')
-          setLoggedIn(true)
-          setCheckbox(res.data.userPost.subscription)
-          setSubUser({ ...subUser, userId: res.data.userPost.userId })
+          localStorage.setItem(
+            'user',
+            JSON.stringify({
+              userId: res.data.userPost.userId,
+              subscription: res.data.userPost.subscription,
+            })
+          )
+          setFailure(false)
+          setCheckbox(subUser.subscription)
+          setSubUser({ ...res.data.userPost })
           console.log(res.data.userPost.subscription)
+          console.log(subUser)
         }
       })
   }
-
-  // const signinUser = async () => {
-  //   console.log('körs')
-
-  //   const response = await fetch('http://localhost:5000/users/login', {
-  //     method: 'POST',
-  //     body: JSON.stringify(user),
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       credentials: 'include',
-  //     },
-  //   })
-  //   setLoggedIn(true)
-
-  //   const result = await response.json()
-  //   console.log(result)
-  // }
 
   const updateSub = async () => {
     await axios
@@ -78,17 +58,14 @@ const Home: NextPage = () => {
         console.log(res)
       })
     console.log(checkbox)
-    setChangedSub(<p>Subscription status changed!</p>)
+    setChangedSub(true)
   }
 
   const handleChecked = () => {
     setCheckbox(!checkbox)
     setSubUser({ ...subUser, subscription: !checkbox })
-    // setChangedSub(<p>Subscription status changed!</p>)
-
     setTimeout(() => {
-      setChangedSub('')
-
+      setChangedSub(false)
       console.log(!checkbox)
     }, 3000)
   }
@@ -100,29 +77,23 @@ const Home: NextPage = () => {
 
   const handleLogout = () => {
     localStorage.clear()
-    setLoggedIn(false)
+    setSubUser({ userId: '', subscription: false })
   }
 
   const handleLogin = (e: ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value })
   }
-  // const getLoggedInUser = async (userId: string) => {
-  //   await axios.get(`http://localhost:5000/users/${userId}`).then((res) => {
-  //     console.log(res)
-  //   })
-
-  // }
 
   useEffect(() => {
-    if (localStorage.getItem('user') || '') {
-      // getLoggedInUser(localStorage.getItem('user') as string)
-      setLoggedIn(true)
+    const existingUser = localStorage.getItem('user')
+    if (existingUser) {
+      setSubUser(JSON.parse(existingUser))
     }
   }, [])
 
   return (
     <>
-      {!loggedIn && (
+      {!subUser.userId && (
         <div className="flex min-h-screen flex-col items-center justify-center py-2">
           <h1 className="mb-8 text-center text-3xl">
             Very nice log in page yes
@@ -171,7 +142,6 @@ const Home: NextPage = () => {
                 <button
                   className="focus:shadow-outline mr-5 rounded bg-purple-500 py-2 px-4 font-bold text-white shadow hover:bg-purple-400 focus:outline-none"
                   type="submit"
-                  // onClick={handleClick}
                 >
                   Log in
                 </button>
@@ -183,17 +153,17 @@ const Home: NextPage = () => {
                     Sign up
                   </button>
                 </Link>
-                {failure}
+                {failure && <p>Fel användarnamn eller lösenord</p>}
               </div>
             </div>
           </form>
         </div>
       )}
-      {loggedIn && (
+      {subUser.userId && (
         <div className="flex min-h-screen flex-col items-center justify-center py-2">
           <h1 className="mb-5 text-9xl">😋</h1>
           <h1 className="mb-8 text-center text-3xl">
-            Welcome user with ID: <br /> {localStorage.getItem('user')}
+            Welcome user with ID: <br /> {subUser.userId}
           </h1>
 
           <p className="text-l mb-5 text-center">
@@ -207,7 +177,7 @@ const Home: NextPage = () => {
               type="checkbox"
               className="h-6 w-6  rounded-md border-0 focus:ring-0"
               onChange={handleChecked}
-              checked={checkbox}
+              checked={subUser.subscription}
             />
 
             <br />
@@ -218,7 +188,7 @@ const Home: NextPage = () => {
             >
               Save
             </button>
-            {changesSub}
+            {changesSub && <p>Subscription status changed!</p>}
           </form>
           <Link href={'/'}>
             <button
