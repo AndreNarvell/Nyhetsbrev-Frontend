@@ -14,7 +14,7 @@ npm run dev
 
 ---
 
-### Dependencies
+### Added dependencies
 Axios for CRUD
 
 ---
