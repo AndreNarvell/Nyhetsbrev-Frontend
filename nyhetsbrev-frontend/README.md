@@ -1,8 +1,11 @@
 # Nyhetsbrev-Frontend
 
-#### School assignment where a user can log in and change their subscription status and also see if they already are subscribed or not. The visitor can also create their own account and choose to subscribe to the news letter or not.
+#### School assignment where a user can log in and change their subscription status and also see if they already are subscribed or not. The visitor can also create their own account and choose to subscribe to the newsletter or not, and then log in.
 ---
 
+Client: Next.js and Tailwind CSS. Deployed on Vercel
+Server: NodeJS and Express. Deployed on Azure
+---
 
 
 # Next.js + Tailwind CSS Example
